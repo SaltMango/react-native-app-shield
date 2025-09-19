@@ -19,8 +19,16 @@ export default function App() {
     setMessage(null);
     try {
       const res = await AppShield.requestRequiredPermissions();
-      setScreenTimeGranted(!!res?.screenTime);
-      setMessage(`Screen Time: ${res?.screenTime ? 'granted' : 'denied'}`);
+      setScreenTimeGranted(res?.screenTime ?? null);
+      if (Platform.OS === 'ios') {
+        setMessage(`Screen Time: ${res?.screenTime ? 'granted' : 'denied'}`);
+      } else {
+        setMessage(
+          `Accessibility: ${res?.accessibility ? 'granted' : 'denied'} | Usage: ${
+            res?.usageAccess ? 'granted' : 'denied'
+          } | Notifications: ${res?.notifications ? 'granted' : 'denied'}`
+        );
+      }
     } catch (e: any) {
       setMessage(`Permission error: ${e?.message ?? 'unknown error'}`);
     }

@@ -1,7 +1,12 @@
 import { NativeModules, Platform } from 'react-native';
 
 type PermissionStatus = {
-  screenTime: boolean;
+  // iOS
+  screenTime?: boolean;
+  // Android
+  accessibility?: boolean;
+  usageAccess?: boolean;
+  notifications?: boolean;
 };
 
 export type AppShieldNative = {
