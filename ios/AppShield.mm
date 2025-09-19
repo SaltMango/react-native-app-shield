@@ -1,11 +1,10 @@
 #import "AppShield.h"
 
-@implementation AppShield
-RCT_EXPORT_MODULE()
+@implementation AppShieldLegacy
+RCT_EXPORT_MODULE(AppShieldLegacy)
 
 - (NSNumber *)multiply:(double)a b:(double)b {
     NSNumber *result = @(a * b);
-
     return result;
 }
 

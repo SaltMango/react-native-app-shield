@@ -1,7 +1,29 @@
-import { TurboModuleRegistry, type TurboModule } from 'react-native';
+import { NativeModules, Platform } from 'react-native';
 
-export interface Spec extends TurboModule {
-  multiply(a: number, b: number): number;
+type PermissionStatus = {
+  screenTime: boolean;
+};
+
+export type AppShieldNative = {
+  blockAllApps(): void;
+  unblockAllApps(): void;
+  requestRequiredPermissions(): Promise<PermissionStatus>;
+};
+
+const LINKING_ERROR =
+  `The package 'AppShield' doesn't seem to be linked. Make sure:
+\n\n` +
+  Platform.select({
+    ios: "- You have run 'pod install' in the ios folder\n",
+    default: '',
+  }) +
+  '- You rebuilt the app after installing the package\n' +
+  '- You are not using Expo Go (need Dev Build or Bare)\n';
+
+const AppShieldModule = NativeModules.AppShield as AppShieldNative | undefined;
+
+if (!AppShieldModule) {
+  throw new Error(LINKING_ERROR);
 }
 
-export default TurboModuleRegistry.getEnforcing<Spec>('AppShield');
+export default AppShieldModule;

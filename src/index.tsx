@@ -1,5 +1,9 @@
-import AppShield from './NativeAppShield';
+import Native from './NativeAppShield';
 
-export function multiply(a: number, b: number): number {
-  return AppShield.multiply(a, b);
-}
+export const AppShield = {
+  blockAllApps: () => Native.blockAllApps(),
+  unblockAllApps: () => Native.unblockAllApps(),
+  requestRequiredPermissions: () => Native.requestRequiredPermissions(),
+};
+
+export default AppShield;
