@@ -1,7 +1,6 @@
 #import <AppShieldSpec/AppShieldSpec.h>
+#import <React/RCTBridgeModule.h>
 
-// Legacy codegen-based module kept for backward compatibility.
-// Renamed to avoid conflict with the new Swift-based AppShield module.
-@interface AppShieldLegacy : NSObject <NativeAppShieldSpec>
-
+// ObjC wrapper that conforms to the generated NativeAppShieldSpec and forwards to Swift
+@interface AppShield : NSObject <NativeAppShieldSpec>
 @end

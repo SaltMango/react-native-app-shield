@@ -32,7 +32,9 @@
     "!**/.*"
   ],
   "scripts": {
-    "example": "yarn workspace react-native-app-shield-example",
+    "example:start": "pnpm -w -F react-native-app-shield-example start",
+    "example:android": "pnpm -w -F react-native-app-shield-example android",
+    "example:ios": "pnpm -w -F react-native-app-shield-example ios",
     "test": "jest",
     "typecheck": "tsc",
     "lint": "eslint \"**/*.{js,ts,tsx}\"",

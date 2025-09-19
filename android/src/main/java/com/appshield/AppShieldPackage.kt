@@ -8,13 +8,8 @@ import com.facebook.react.module.model.ReactModuleInfoProvider
 import java.util.HashMap
 
 class AppShieldPackage : BaseReactPackage() {
-  override fun getModule(name: String, reactContext: ReactApplicationContext): NativeModule? {
-    return if (name == AppShieldModule.NAME) {
-      AppShieldModule(reactContext)
-    } else {
-      null
-    }
-  }
+  override fun getModule(name: String, reactContext: ReactApplicationContext): NativeModule? =
+    if (name == AppShieldModule.NAME) AppShieldModule(reactContext) else null
 
   override fun getReactModuleInfoProvider(): ReactModuleInfoProvider {
     return ReactModuleInfoProvider {

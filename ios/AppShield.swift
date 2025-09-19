@@ -1,9 +1,10 @@
 import Foundation
 import ManagedSettings
 import FamilyControls
+import React
 
-@objc(AppShield)
-class AppShield: NSObject {
+@objc(AppShieldSwift)
+class AppShieldSwift: NSObject {
     private let store = ManagedSettingsStore()
 
     @objc static func requiresMainQueueSetup() -> Bool { true }
@@ -43,7 +44,7 @@ class AppShield: NSObject {
 }
 
 // MARK: - React Native Bridge
-@objc(AppShield)
-extension AppShield: RCTBridgeModule {}
+@objc(AppShieldSwift)
+extension AppShieldSwift: RCTBridgeModule {}
 
 

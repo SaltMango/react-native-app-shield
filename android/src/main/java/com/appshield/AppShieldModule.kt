@@ -3,6 +3,7 @@ package com.appshield
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.Promise
 import com.facebook.react.module.annotations.ReactModule
+import com.facebook.react.bridge.ReactContextBaseJavaModule
 import android.content.Intent
 import android.provider.Settings
 import android.os.Build
@@ -13,29 +14,29 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.PermissionChecker
 
 @ReactModule(name = AppShieldModule.NAME)
-class AppShieldModule(reactContext: ReactApplicationContext) :
-  NativeAppShieldSpec(reactContext) {
+class AppShieldModule(private val context: ReactApplicationContext) :
+  NativeAppShieldSpec(context) {
 
   override fun getName(): String {
     return NAME
   }
 
   override fun blockAllApps() {
-    val ctx = reactApplicationContext
+    val ctx = context
     val intent = Intent(ctx, AppShieldAccessibilityService::class.java)
     ContextCompat.startForegroundService(ctx, intent)
     // Send a command by binding or static reference if needed; here we rely on service instance
   }
 
   override fun unblockAllApps() {
-    val ctx = reactApplicationContext
+    val ctx = context
     val intent = Intent(ctx, AppShieldAccessibilityService::class.java)
     ctx.stopService(intent)
   }
 
   override fun requestRequiredPermissions(promise: Promise) {
     try {
-      val ctx = reactApplicationContext
+      val ctx = context
       val result = com.facebook.react.bridge.Arguments.createMap()
 
       // Accessibility
