@@ -25,10 +25,14 @@ import androidx.core.content.PermissionChecker
 import android.util.Log
 import androidx.core.app.NotificationManagerCompat
 import android.app.NotificationManager
+import com.facebook.react.modules.core.PermissionAwareActivity
+import com.facebook.react.modules.core.PermissionListener
 
 @ReactModule(name = AppShieldModule.NAME)  
 class AppShieldModule(private val context: ReactApplicationContext) :
   ReactContextBaseJavaModule(context) {
+
+  private var notificationPermissionPromise: Promise? = null
 
   override fun getName(): String {
     return NAME
@@ -421,16 +425,47 @@ class AppShieldModule(private val context: ReactApplicationContext) :
   @ReactMethod
   fun requestNotificationPermission(promise: Promise) {
     try {
-      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        // Open notification settings for the app
+      if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+        promise.resolve(true)
+        return
+      }
+
+      // If already enabled, resolve immediately
+      if (NotificationManagerCompat.from(context).areNotificationsEnabled()) {
+        promise.resolve(true)
+        return
+      }
+
+      val activity = getCurrentActivity()
+      if (activity is PermissionAwareActivity) {
+        notificationPermissionPromise = promise
+        activity.requestPermissions(
+          arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+          1001,
+          object : PermissionListener {
+            override fun onRequestPermissionsResult(
+              requestCode: Int,
+              permissions: Array<String>,
+              grantResults: IntArray
+            ): Boolean {
+              if (requestCode == 1001) {
+                val granted = grantResults.isNotEmpty() &&
+                  grantResults[0] == PackageManager.PERMISSION_GRANTED
+                notificationPermissionPromise?.resolve(granted)
+                notificationPermissionPromise = null
+                return true
+              }
+              return false
+            }
+          }
+        )
+      } else {
+        // Fallback: open app notification settings if we don't have a PermissionAwareActivity
         val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
           putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
           addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
         context.startActivity(intent)
-        promise.resolve(true)
-      } else {
-        // Not needed on older versions
         promise.resolve(true)
       }
     } catch (e: Exception) {
