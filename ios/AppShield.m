@@ -31,7 +31,14 @@ RCT_EXPORT_MODULE(AppShield)
   [_swift unblockAllApps];
 }
 
-- (void)requestRequiredPermissions:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject
+// Removed combined permissions API
+
+- (void)getPermissionStatus:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject
+{
+  [_swift requestRequiredPermissions:resolve rejecter:reject];
+}
+
+- (void)requestScreenTimeAuthorization:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject
 {
   [_swift requestRequiredPermissions:resolve rejecter:reject];
 }

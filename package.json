@@ -1,7 +1,7 @@
 {
   "name": "react-native-app-shield",
-  "version": "0.1.0",
-  "description": "A library to block all apps except default",
+  "version": "1.0.0",
+  "description": "A comprehensive React Native library for blocking apps with location-based restrictions, featuring robust OEM-specific support and production-ready implementation.",
   "main": "./lib/module/index.js",
   "types": "./lib/typescript/src/index.d.ts",
   "exports": {
@@ -45,7 +45,18 @@
   "keywords": [
     "react-native",
     "ios",
-    "android"
+    "android",
+    "app-blocking",
+    "parental-control",
+    "accessibility-service",
+    "geofencing",
+    "location-based",
+    "app-restriction",
+    "focus-management",
+    "productivity",
+    "oem-support",
+    "screen-time",
+    "device-management"
   ],
   "repository": {
     "type": "git",

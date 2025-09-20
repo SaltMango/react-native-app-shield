@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="accessibility_service_description">AppShield Accessibility Service provides comprehensive app blocking functionality with OEM-specific support. It monitors app usage and enforces restrictions while protecting against bypass attempts. Essential for parental control and focus management.</string>
+    <string name="app_name">AppShield</string>
+    <string name="bg_stop">Background app limit</string>
+    <string name="bg_service">Background activity</string>
+    <string name="service_notification_title">AppShield Protection Active</string>
+    <string name="service_notification_text">Monitoring and blocking restricted apps</string>
+    <string name="block_message">This app is blocked</string>
+    <string name="usage_restricted">Usage Restricted</string>
+    <string name="permissions_restricted">Access to permissions is restricted</string>
+</resources>
