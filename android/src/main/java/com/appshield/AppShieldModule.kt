@@ -23,6 +23,8 @@ import android.os.PowerManager
 import androidx.core.content.ContextCompat
 import androidx.core.content.PermissionChecker
 import android.util.Log
+import androidx.core.app.NotificationManagerCompat
+import android.app.NotificationManager
 
 @ReactModule(name = AppShieldModule.NAME)  
 class AppShieldModule(private val context: ReactApplicationContext) :
@@ -68,6 +70,17 @@ class AppShieldModule(private val context: ReactApplicationContext) :
       val result = Arguments.createMap()
       result.putBoolean("accessibility", isAccessibilityEnabled(ctx))
       result.putBoolean("usageAccess", isUsageAccessGranted(ctx))
+      
+      // Check notification permission (Android 13+)
+      val hasNotificationPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        NotificationManagerCompat.from(context).areNotificationsEnabled()
+      } else {
+        true // Not required on older versions
+      }
+      result.putBoolean("notifications", hasNotificationPermission)
+      
+      // Overlay permission no longer required for toast; not checking
+      
       promise.resolve(result)
     } catch (e: Exception) {
       promise.reject("permission_error", e.message, e)
@@ -384,6 +397,47 @@ class AppShieldModule(private val context: ReactApplicationContext) :
       false
     }
   }
+
+  @ReactMethod
+  fun setToastEnabled(enabled: Boolean) {
+    val prefs = context.getSharedPreferences("appshield_prefs", Context.MODE_PRIVATE)
+    prefs.edit().putBoolean("toast_enabled", enabled).apply()
+    
+    // Notify the accessibility service of the change
+    AppShieldAccessibilityService.setToastEnabled(enabled)
+  }
+
+  @ReactMethod
+  fun isToastEnabled(promise: Promise) {
+    try {
+      val prefs = context.getSharedPreferences("appshield_prefs", Context.MODE_PRIVATE)
+      val enabled = prefs.getBoolean("toast_enabled", true) // Default to true
+      promise.resolve(enabled)
+    } catch (e: Exception) {
+      promise.reject("TOAST_CHECK_ERROR", "Failed to check toast status", e)
+    }
+  }
+
+  @ReactMethod
+  fun requestNotificationPermission(promise: Promise) {
+    try {
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        // Open notification settings for the app
+        val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+          putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+          addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        context.startActivity(intent)
+        promise.resolve(true)
+      } else {
+        // Not needed on older versions
+        promise.resolve(true)
+      }
+    } catch (e: Exception) {
+      promise.reject("NOTIFICATION_PERMISSION_ERROR", "Failed to request notification permission", e)
+    }
+  }
+
   
 
   companion object {

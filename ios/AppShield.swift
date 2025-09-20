@@ -103,6 +103,20 @@ class AppShieldSwift: NSObject {
         ]
         resolve(deviceInfo)
     }
+
+    // MARK: - Toast Control (iOS dummy implementations)
+    @objc func setToastEnabled(_ enabled: Bool) {
+        // iOS doesn't show toast messages like Android, so this is a no-op
+        // Could potentially be used to control other notification types in the future
+        UserDefaults.standard.set(enabled, forKey: "appshield_toast_enabled")
+    }
+
+    @objc func isToastEnabled(_ resolve: RCTPromiseResolveBlock,
+                              rejecter reject: RCTPromiseRejectBlock) {
+        // Return the stored preference, defaulting to true
+        let enabled = UserDefaults.standard.object(forKey: "appshield_toast_enabled") as? Bool ?? true
+        resolve(enabled)
+    }
 }
 
 // MARK: - React Native Bridge

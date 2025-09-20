@@ -26,6 +26,10 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     
+    <!-- Toast and notification permissions -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
+    
     <!-- MIUI-specific permissions -->
     <uses-permission android:name="miui.permission.ASK_SYSTEM_PERMISSION" />
     <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
@@ -34,6 +38,8 @@
     <uses-permission android:name="android.permission.EXPAND_STATUS_BAR" />
     <uses-permission android:name="android.permission.WRITE_SECURE_SETTINGS" 
         tools:ignore="ProtectedPermissions" />
+    
+    
 
     <application>
         <!-- Accessibility Service -->

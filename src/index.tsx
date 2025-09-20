@@ -235,6 +235,34 @@ class AppShieldManager {
       };
     }
   }
+
+  /**
+   * Enable or disable toast messages when apps are blocked
+   * @param enabled - true to show toast messages, false to disable them
+   */
+  static setToastEnabled(enabled: boolean): void {
+    return AppShield.setToastEnabled(enabled);
+  }
+
+  /**
+   * Check if toast messages are currently enabled
+   * @returns Promise<boolean> - true if toast messages are enabled
+   */
+  static async isToastEnabled(): Promise<boolean> {
+    return AppShield.isToastEnabled();
+  }
+
+  /**
+   * Request notification permission (required for toasts on Android 13+)
+   * Opens the notification settings page for the app
+   * @returns Promise<boolean> - true if settings were opened successfully
+   */
+  static async requestNotificationPermission(): Promise<boolean> {
+    if (Platform.OS === 'android') {
+      return AppShield.requestNotificationPermission();
+    }
+    return true; // Not needed on iOS
+  }
 }
 
 export type { PermissionStatus, AppInfo, DeviceCompatibility };

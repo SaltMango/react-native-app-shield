@@ -22,6 +22,7 @@ export default function App() {
   const [customAllowedApps, setCustomAllowedApps] = useState<string[]>([]);
   const [defaultAllowedApps, setDefaultAllowedApps] = useState<string[]>([]);
   const [isMIUI, setIsMIUI] = useState(false);
+  const [toastEnabled, setToastEnabledState] = useState(true);
 
   useEffect(() => {
     initializeApp();
@@ -37,6 +38,7 @@ export default function App() {
     await loadCustomAllowedApps();
     await loadDefaultAllowedApps();
     await checkMIUIDevice();
+    await checkToastStatus();
   };
 
   const checkPermissions = async () => {
@@ -134,6 +136,29 @@ export default function App() {
       Alert.alert('Error', `Failed to request permissions: ${error}`);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const checkToastStatus = async () => {
+    try {
+      const enabled = await AppShieldManager.isToastEnabled();
+      setToastEnabledState(enabled);
+    } catch (error) {
+      console.error('Error checking toast status:', error);
+    }
+  };
+
+  const toggleToast = async () => {
+    try {
+      const newState = !toastEnabled;
+      AppShieldManager.setToastEnabled(newState);
+      setToastEnabledState(newState);
+      Alert.alert(
+        'Toast Settings Updated',
+        `Toast messages are now ${newState ? 'enabled' : 'disabled'}`
+      );
+    } catch (error) {
+      Alert.alert('Error', `Failed to update toast settings: ${error}`);
     }
   };
 
@@ -306,6 +331,55 @@ export default function App() {
             When blocking is enabled, only essential system apps and custom
             allowed apps are permitted.
           </Text>
+
+          <View style={styles.toastContainer}>
+            <Text style={styles.toastLabel}>Toast Messages:</Text>
+            <TouchableOpacity
+              style={[
+                styles.toastToggle,
+                toastEnabled ? styles.toastEnabled : styles.toastDisabled,
+              ]}
+              onPress={toggleToast}
+            >
+              <Text style={styles.toastToggleText}>
+                {toastEnabled ? 'Enabled' : 'Disabled'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          <Text style={styles.infoText}>
+            {toastEnabled
+              ? 'Toast message "The App is restricted now" will be shown when blocked apps are opened.'
+              : 'Toast messages are disabled. Apps will be blocked silently.'}
+          </Text>
+
+          <View style={styles.permissionSection}>
+            <Text style={styles.sectionTitle}>Toast Permissions</Text>
+            <TouchableOpacity
+              style={styles.permissionButton}
+              onPress={async () => {
+                try {
+                  await AppShieldManager.requestNotificationPermission();
+                  Alert.alert(
+                    'Permission Request',
+                    'Notification settings opened. Please enable notifications and return to the app.'
+                  );
+                } catch (error) {
+                  Alert.alert('Error', 'Failed to open notification settings');
+                }
+              }}
+            >
+              <Text style={styles.permissionButtonText}>
+                Request Notification Permission
+              </Text>
+            </TouchableOpacity>
+
+            <Text style={styles.infoText}>
+              💡 Tip: On Android 13+ (and MIUI), ensure Notifications are
+              enabled for the app so the toast/alert is visible when a blocked
+              app is opened.
+            </Text>
+          </View>
 
           {defaultAllowedApps.length > 0 && (
             <View style={styles.allowedAppsContainer}>
@@ -559,5 +633,61 @@ const styles = StyleSheet.create({
   miuiButton: {
     flex: 1,
     backgroundColor: '#fd79a8',
+  },
+  toastContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginVertical: 12,
+    padding: 12,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#dee2e6',
+  },
+  toastLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#495057',
+  },
+  toastToggle: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    minWidth: 80,
+    alignItems: 'center',
+  },
+  toastEnabled: {
+    backgroundColor: '#28a745',
+  },
+  toastDisabled: {
+    backgroundColor: '#6c757d',
+  },
+  toastToggleText: {
+    color: 'white',
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  permissionSection: {
+    marginVertical: 16,
+    padding: 16,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#dee2e6',
+  },
+  permissionButton: {
+    backgroundColor: '#007bff',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 8,
+    marginVertical: 4,
+    alignItems: 'center',
+  },
+  permissionButtonText: {
+    color: 'white',
+    fontWeight: '600',
+    fontSize: 14,
+    textAlign: 'center',
   },
 });

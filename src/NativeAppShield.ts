@@ -57,6 +57,18 @@ export interface Spec extends TurboModule {
   getCustomAllowedApps(): Promise<string[]>;
   getInstalledApps(): Promise<AppInfo[]>;
   checkDeviceCompatibility(): Promise<DeviceCompatibility>;
+  getDefaultAllowedApps(): Promise<string[]>;
+  initializeAllowedApps(): void;
+  openAutoStartSettings(): Promise<boolean>;
+  openBatteryOptimizationSettings(): Promise<boolean>;
+  isMIUIDevice(): Promise<boolean>;
+
+  // Toast message control
+  setToastEnabled(enabled: boolean): void;
+  isToastEnabled(): Promise<boolean>;
+
+  // Permission requests for toast functionality
+  requestNotificationPermission(): Promise<boolean>;
 }
 
 export default TurboModuleRegistry.getEnforcing<Spec>('AppShield');

@@ -52,9 +52,10 @@ class AppShieldAccessibilityService : AccessibilityService() {
   private var restrictUninstall = true
   private var allowedApps: List<String> = emptyList()
 
-  companion object Controller {
-    @Volatile private var activeInstance: AppShieldAccessibilityService? = null
-    const val ACTION_ENABLE_BLOCK_ALL = "ENABLE_BLOCK_ALL"
+    companion object Controller {
+        @Volatile private var activeInstance: AppShieldAccessibilityService? = null
+        const val ACTION_ENABLE_BLOCK_ALL = "ENABLE_BLOCK_ALL"
+        @Volatile private var toastEnabled: Boolean = true
     const val ACTION_DISABLE_BLOCK_ALL = "DISABLE_BLOCK_ALL"
 
     fun enableBlockAll() {
@@ -77,6 +78,14 @@ class AppShieldAccessibilityService : AccessibilityService() {
       activeInstance?.initializeDefaultAllowedApps()
     }
 
+    fun setToastEnabled(enabled: Boolean) {
+      toastEnabled = enabled
+    }
+
+    fun isToastEnabled(): Boolean {
+      return toastEnabled
+    }
+
   }
 
   override fun onServiceConnected() {
@@ -94,6 +103,10 @@ class AppShieldAccessibilityService : AccessibilityService() {
     
     // Load persisted custom allowed apps
     loadCustomAllowedApps()
+
+    // Load toast preference
+    val prefs = applicationContext.getSharedPreferences("appshield_prefs", MODE_PRIVATE)
+    toastEnabled = prefs.getBoolean("toast_enabled", true) // Default to true
 
     // Tune service info for broader coverage
     val info = AccessibilityServiceInfo()
@@ -610,8 +623,10 @@ class AppShieldAccessibilityService : AccessibilityService() {
       requestAudioFocus()
     }
 
-    if (showToast)
-      showToast("This app is blocked")
+    Log.d("AppShieldService", "handleBlockingScenario completed, showToast: $showToast")
+    if (showToast) {
+      showToast("The App is restricted now")
+    }
 
   }
 
@@ -867,19 +882,97 @@ class AppShieldAccessibilityService : AccessibilityService() {
   }
 
   private fun showToast(message: String) {
+    Log.d("AppShieldService", "showToast called with message: $message, toastEnabled: $toastEnabled")
+    
+    // Check if toasts are enabled
+    if (!toastEnabled) {
+      Log.d("AppShieldService", "Toast disabled by user setting")
+      return
+    }
+
     val currentTime = System.currentTimeMillis()
     val isSameMessage = message == lastToastMessage
     val isWithinTimeLimit = (currentTime - lastToastTime) < 5000
 
     if (isSameMessage && isWithinTimeLimit) {
+      Log.d("AppShieldService", "Toast suppressed due to rate limiting")
       return
     }
 
     lastToastMessage = message
     lastToastTime = currentTime
 
+    Log.d("AppShieldService", "Attempting to show toast: $message")
+    
     Handler(Looper.getMainLooper()).post {
-      Toast.makeText(applicationContext, message, Toast.LENGTH_LONG).show()
+      try {
+        val toast = Toast.makeText(applicationContext, message, Toast.LENGTH_LONG)
+        toast.show()
+        Log.d("AppShieldService", "Toast.show() called successfully")
+      } catch (e: Exception) {
+        Log.e("AppShieldService", "Failed to show toast: ${e.message}")
+      }
+    }
+    
+    // Also log system overlay permission status for troubleshooting
+    val canDrawOverlays = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+      Settings.canDrawOverlays(applicationContext)
+    } else {
+      true // Permission not needed on older versions
+    }
+    
+    Log.d("AppShieldService", "System might be suppressing toasts - this is common on MIUI devices")
+    Log.d("AppShieldService", "Toast message would have been: '$message'")
+    Log.d("AppShieldService", "Can draw overlays permission: $canDrawOverlays")
+    Log.d("AppShieldService", "To enable toasts on MIUI: Settings > Apps > AppShield Example > Permissions > Display pop-up windows")
+    Log.d("AppShieldService", "Or: Settings > Apps > AppShield Example > Notifications > Allow notifications")
+
+    // Fallback: show a lightweight notification if notifications are enabled (helps on MIUI)
+    try {
+      val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+      val notificationsEnabled = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+        nm.areNotificationsEnabled()
+      } else {
+        true
+      }
+
+      if (notificationsEnabled) {
+        showFallbackNotification(message)
+      } else {
+        Log.d("AppShieldService", "Notifications disabled; fallback notification suppressed")
+      }
+    } catch (e: Exception) {
+      Log.e("AppShieldService", "Failed to post fallback notification: ${e.message}")
+    }
+  }
+
+  private fun showFallbackNotification(message: String) {
+    val channelId = "appshield_toast_fallback_channel"
+    val channelName = "AppShield Alerts"
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+      val service = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+      var chan = service.getNotificationChannel(channelId)
+      if (chan == null) {
+        chan = NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_LOW)
+        chan.lockscreenVisibility = Notification.VISIBILITY_PRIVATE
+        service.createNotificationChannel(chan)
+      }
+    }
+
+    val notification = NotificationCompat.Builder(this, channelId)
+      .setContentTitle(getString(R.string.usage_restricted))
+      .setContentText(message)
+      .setSmallIcon(android.R.drawable.ic_dialog_alert)
+      .setPriority(NotificationCompat.PRIORITY_LOW)
+      .setAutoCancel(true)
+      .build()
+
+    try {
+      val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+      nm.notify(1002, notification)
+    } catch (e: Exception) {
+      Log.e("AppShieldService", "Failed to show fallback notification: ${e.message}")
     }
   }
 
